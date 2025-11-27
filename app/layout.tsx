@@ -43,6 +43,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable} ${montserrat.variable}`}>
       <body className="font-sans antialiased">
+        {/* Plausible Analytics - replace MYDOMAIN.com with your domain */}
+        <script defer data-domain="MYDOMAIN.com" src="https://plausible.io/js/script.js"></script>
         <Header />
         <main className="min-h-screen">{children}</main>
         <Footer />

@@ -4,18 +4,33 @@ import { useState, FormEvent, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import emailjs from '@emailjs/browser'
 
+interface FormData {
+  name: string
+  email: string
+  phone: string
+  message: string
+  time: string
+}
+
+interface ContactInfo {
+  icon: string
+  title: string
+  content: string
+  link: string
+}
+
 export default function ContactPage() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
     phone: '',
     message: '',
+    time: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
   useEffect(() => {
-    // Initialize EmailJS with public key
     const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
     if (publicKey) {
       emailjs.init(publicKey)
@@ -23,10 +38,33 @@ export default function ContactPage() {
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const validateEmailJSConfig = (): boolean => {
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID
+    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
+
+    if (!serviceId || !templateId || !publicKey) {
+      console.error('EmailJS configuration missing. Please check your environment variables.')
+      return false
+    }
+
+    const isDefault = serviceId === 'your_service_id' || 
+                     templateId === 'your_template_id' || 
+                     publicKey === 'your_public_key'
+
+    if (isDefault) {
+      console.error('EmailJS is not properly configured. Please set up your EmailJS credentials in .env.local')
+      return false
+    }
+
+    return true
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -35,53 +73,63 @@ export default function ContactPage() {
     setSubmitStatus('idle')
 
     try {
-      // EmailJS configuration
-      // You'll need to set these in your .env.local file
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'your_service_id'
-      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'your_template_id'
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'your_public_key'
-
-      // Validate EmailJS configuration
-      if (serviceId === 'your_service_id' || templateId === 'your_template_id' || publicKey === 'your_public_key') {
-        throw new Error('EmailJS is not configured. Please set up your EmailJS credentials in .env.local')
+      // Validate configuration before proceeding
+      if (!validateEmailJSConfig()) {
+        throw new Error('EmailJS configuration is invalid')
       }
 
-      // Send email via EmailJS
-      await emailjs.send(
-        serviceId,
-        templateId,
-        {
-          from_name: formData.name,
-          from_email: formData.email,
-          to_email: 'alphwan14@gmail.com', // Recipient email
-          phone: formData.phone || 'Not provided',
-          message: formData.message,
-          reply_to: formData.email, // Allow replying directly to the sender
-        },
-        publicKey
-      )
+      // Set current time
+      const now = new Date().toLocaleString()
+      
+      // Update form data with current time
+      const submissionData = {
+        ...formData,
+        time: now,
+      }
+
+      // EmailJS configuration
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
+
+      // Template parameters
+      const templateParams = {
+        name: submissionData.name,
+        email: submissionData.email,
+        phone: submissionData.phone || 'Not provided',
+        time: submissionData.time,
+        message: submissionData.message,
+        reply_to: submissionData.email,
+      }
+
+      await emailjs.send(serviceId, templateId, templateParams, publicKey)
 
       setSubmitStatus('success')
-      setFormData({ name: '', email: '', phone: '', message: '' })
-      
+      setFormData({ 
+        name: '', 
+        email: '', 
+        phone: '', 
+        message: '', 
+        time: '' 
+      })
+
+      // Track form submission with Plausible
+      if (typeof window !== 'undefined' && (window as any).plausible) {
+        (window as any).plausible('form_submission', { props: { page: 'contact' } })
+      }
+
       // Reset status after 5 seconds
-      setTimeout(() => {
-        setSubmitStatus('idle')
-      }, 5000)
+      setTimeout(() => setSubmitStatus('idle'), 5000)
     } catch (error) {
       console.error('Error sending message:', error)
       setSubmitStatus('error')
-      
-      // Reset error status after 5 seconds
-      setTimeout(() => {
-        setSubmitStatus('idle')
-      }, 5000)
+      setTimeout(() => setSubmitStatus('idle'), 5000)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const contactInfo = [
+  const contactInfo: ContactInfo[] = [
     {
       icon: '📧',
       title: 'Email',
@@ -114,10 +162,13 @@ export default function ContactPage() {
             className="text-center max-w-3xl mx-auto"
           >
             <h1 className="text-5xl sm:text-6xl font-bold mb-6">
-              Get in <span className="bg-gradient-to-r from-primary-light to-secondary-light bg-clip-text text-transparent">Touch</span>
+              Get in{' '}
+              <span className="bg-gradient-to-r from-primary-light to-secondary-light bg-clip-text text-transparent">
+                Touch
+              </span>
             </h1>
             <p className="text-xl text-gray-300">
-              Have a problem we can solve? Send us a message and we'll get back to you as soon as possible.
+              Have a problem we can solve? Send us a message and we&apos;ll get back to you as soon as possible.
             </p>
           </motion.div>
         </div>
@@ -136,6 +187,12 @@ export default function ContactPage() {
             >
               <h2 className="text-3xl font-bold mb-6">Send Us a Message</h2>
               <form onSubmit={handleSubmit} className="space-y-6">
+                <input 
+                  type="hidden" 
+                  name="time" 
+                  value={formData.time} 
+                />
+                
                 <div>
                   <label htmlFor="name" className="block text-gray-300 mb-2 font-medium">
                     Name <span className="text-primary-light">*</span>
@@ -149,6 +206,7 @@ export default function ContactPage() {
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-primary-dark/50 border border-primary-light/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-light transition-colors"
                     placeholder="Your name"
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -165,6 +223,7 @@ export default function ContactPage() {
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-primary-dark/50 border border-primary-light/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-light transition-colors"
                     placeholder="your.email@example.com"
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -180,6 +239,7 @@ export default function ContactPage() {
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-primary-dark/50 border border-primary-light/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-light transition-colors"
                     placeholder="+254 123 456 789"
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -196,6 +256,7 @@ export default function ContactPage() {
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-primary-dark/50 border border-primary-light/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-light transition-colors resize-none"
                     placeholder="Tell us about your problem or how we can help..."
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -205,7 +266,7 @@ export default function ContactPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="p-4 bg-green-500/20 border border-green-500/50 rounded-lg text-green-400"
                   >
-                    ✓ Message sent successfully! We'll get back to you soon.
+                    ✓ Message sent successfully! We&apos;ll get back to you soon.
                   </motion.div>
                 )}
 
@@ -244,13 +305,15 @@ export default function ContactPage() {
               <div className="space-y-6 mb-8">
                 {contactInfo.map((info, index) => (
                   <motion.a
-                    key={index}
+                    key={info.title}
                     href={info.link}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, delay: index * 0.1 }}
                     className="block bg-gradient-to-br from-primary-dark to-secondary-dark border border-primary-light/20 rounded-xl p-6 hover:border-primary-light/50 transition-all duration-300 group"
+                    target={info.link.startsWith('http') ? '_blank' : '_self'}
+                    rel={info.link.startsWith('http') ? 'noopener noreferrer' : undefined}
                   >
                     <div className="flex items-start space-x-4">
                       <div className="text-4xl group-hover:scale-110 transition-transform">
@@ -283,4 +346,3 @@ export default function ContactPage() {
     </div>
   )
 }
-

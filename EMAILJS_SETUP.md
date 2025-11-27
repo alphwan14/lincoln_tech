@@ -38,16 +38,16 @@ If you prefer not to connect Gmail directly:
 - **Subject**: `New Contact Form Message from {{from_name}}`
 
 ### Template Content:
-```
-From: {{from_name}}
-Email: {{from_email}}
-Phone: {{phone}}
+Use the following template body — variables must match the form field names exactly.
 
+```
+A new message has been received:
+Name: {{name}}
+Email: {{email}}
+Phone: {{phone}}
+Time: {{time}}
 Message:
 {{message}}
-
----
-Reply to: {{reply_to}}
 ```
 
 4. **Important**: In the template settings, set the **To Email** field to: `alphwan14@gmail.com`
@@ -99,6 +99,10 @@ NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=abcdefghijklmnop
 5. Check your email inbox at `alphwan14@gmail.com`
 
 6. You should receive an email with the form data
+
+## Privacy-safe analytics (Plausible)
+
+This site integrates Plausible Analytics for anonymous, cookie-free analytics. Plausible is privacy-focused and does not collect personal data or identify individual users. You can enable it by adding the script to your layout and setting your domain in the `data-domain` attribute. The contact form will trigger a custom `form_submission` event (no PII attached).
 
 ## Troubleshooting
 

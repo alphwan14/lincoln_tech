@@ -37,7 +37,22 @@ export default function Button({
   }
 
   return (
-    <button type={type} onClick={onClick} className={classes}>
+    <button
+      type={type}
+      onClick={(e) => {
+        try {
+          // fire a privacy-safe Plausible event (no PII)
+          if (typeof (window as any).plausible === 'function') {
+            ;(window as any).plausible('button_click', { props: { variant } })
+          }
+        } catch (err) {
+          // ignore analytics errors
+        }
+
+        if (onClick) onClick()
+      }}
+      className={classes}
+    >
       {children}
     </button>
   )
