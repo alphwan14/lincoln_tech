@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await resend.emails.send({
       from: 'Lincoln Tech Contact Form <onboarding@resend.dev>', // You can customize this after domain verification
       to: process.env.CONTACT_RECEIVER_EMAIL,
-      replyTo: sanitizedEmail,
+      reply_to: sanitizedEmail,
       subject: `New Contact Form Message from ${sanitizedName}`,
       html: htmlContent,
     })
