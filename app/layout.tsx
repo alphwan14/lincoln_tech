@@ -70,9 +70,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: 'D9h8qRAfBDA-dhJpE62Mgp',
-  },
 }
 
 export default function RootLayout({
@@ -106,7 +103,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable} ${montserrat.variable}`}>
       <head>
-        <meta name="google-site-verification" content="D9h8qRAfBDA-dhJpE62Mgp" />
+        {/* CORRECT Google Site Verification Tag */}
+        <meta name="google-site-verification" content="D9h8qRAfBDA-dhJpE62MgpcCPE4_zqwb3daEgi5VQB0" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
