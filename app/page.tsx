@@ -27,46 +27,47 @@ export default function Home() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,224,255,0.1),transparent_50%)]" />
         
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
-            transition={{ duration: 0.8 }}
-            className="text-center max-w-4xl mx-auto"
-          >
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
-              <span className="block">We </span>
-              <span className="inline-block min-w-[200px] text-left">
-                <motion.span
-                  key={currentWord}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="bg-gradient-to-r from-primary-light to-secondary-light bg-clip-text text-transparent"
-                >
-                  {dynamicWords[currentWord]}
-                </motion.span>
-              </span>
-              <span className="block">Solutions</span>
-            </h1>
-            <p className="text-xl sm:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              We solve your business problems with cutting-edge technology. 
-              From automation to digital transformation, we help businesses grow.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/contact"
-                className="px-8 py-4 bg-gradient-to-r from-primary-light to-secondary-light text-primary-dark font-semibold rounded-lg hover:shadow-lg hover:shadow-primary-light/50 transition-all duration-300 transform hover:scale-105 text-lg"
-              >
-                Get Help Today
-              </Link>
-              <Link
-                href="/services"
-                className="px-8 py-4 border-2 border-primary-light text-primary-light font-semibold rounded-lg hover:bg-primary-light hover:text-primary-dark transition-all duration-300 text-lg"
-              >
-                Our Services
-              </Link>
-            </div>
-          </motion.div>
+        
+        <motion.div
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+  transition={{ duration: 0.8 }}
+  className="text-center max-w-4xl mx-auto"
+>
+  <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
+    <span className="block">We </span>
+    <span className="inline-block min-w-[200px] text-left">
+      <motion.span
+        key={currentWord}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="bg-gradient-to-r from-primary-light to-secondary-light bg-clip-text text-transparent"
+      >
+        {dynamicWords[currentWord]}
+      </motion.span>
+    </span>
+    <span className="block">Digital Solutions</span>
+  </h1>
+  <p className="text-xl sm:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
+    Lincoln Tech is your trusted software development partner. Based in Kenya with global reach, 
+    we build custom web solutions, mobile apps, and automation systems that drive business growth worldwide.
+  </p>
+  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+    <Link
+      href="/contact"
+      className="px-8 py-4 bg-gradient-to-r from-primary-light to-secondary-light text-primary-dark font-semibold rounded-lg hover:shadow-lg hover:shadow-primary-light/50 transition-all duration-300 transform hover:scale-105 text-lg"
+    >
+      Get Free Consultation
+    </Link>
+    <Link
+      href="/services"
+      className="px-8 py-4 border-2 border-primary-light text-primary-light font-semibold rounded-lg hover:bg-primary-light hover:text-primary-dark transition-all duration-300 text-lg"
+    >
+      Our Services
+    </Link>
+  </div>
+</motion.div>
         </div>
 
         {/* Scroll Indicator */}

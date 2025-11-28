@@ -8,7 +8,7 @@ A modern, production-ready company website built with Next.js, TypeScript, and T
 - 📱 **Fully Responsive**: Optimized for mobile, tablet, and desktop
 - ⚡ **Fast Performance**: Built with Next.js 14 for optimal performance
 - 🎭 **Smooth Animations**: Framer Motion animations and scroll effects
-- 📧 **Contact Form**: Integrated EmailJS for sending messages
+- 📧 **Contact Form**: Integrated Resend API for sending messages
 - 🔍 **SEO Optimized**: Proper metadata and semantic HTML
 - 🎯 **Problem-Solving Focus**: Content emphasizes solving business problems
 
@@ -18,7 +18,7 @@ A modern, production-ready company website built with Next.js, TypeScript, and T
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Animations**: Framer Motion
-- **Email Service**: EmailJS
+- **Email Service**: Resend
 
 ## Getting Started
 
@@ -40,8 +40,8 @@ npm install
 ```
 
 3. Set up environment variables:
-   - Copy `.env.example` to `.env.local`
-   - Fill in your EmailJS credentials (see EmailJS Setup below)
+   - Create `.env.local` file
+   - Add your Resend API key and receiver email (see Resend Setup below)
 
 4. Run the development server:
 ```bash
@@ -50,52 +50,43 @@ npm run dev
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## EmailJS Setup
+## Resend Setup
 
-The contact form uses EmailJS to send messages to **alphwan14@gmail.com**. 
+The contact form uses Resend to send messages to **alphwan14@gmail.com**. 
 
-📖 **For detailed step-by-step instructions, see [EMAILJS_SETUP.md](./EMAILJS_SETUP.md)**
+📖 **For detailed step-by-step instructions, see [RESEND_SETUP.md](./RESEND_SETUP.md)**
 
 ### Quick Setup:
 
-1. Create an account at [https://www.emailjs.com/](https://www.emailjs.com/)
-2. Add an email service (Gmail recommended)
-3. Create an email template with these variables:
-   - `{{from_name}}`
-   - `{{from_email}}`
-   - `{{phone}}`
-   - `{{message}}`
-   - `{{reply_to}}`
-4. Set the template's "To Email" to: `alphwan14@gmail.com`
-5. Get your Service ID, Template ID, and Public Key
-6. Create `.env.local` file:
+1. Create an account at [https://resend.com/](https://resend.com/)
+2. Get your API key from the [API Keys](https://resend.com/api-keys) page
+3. Create `.env.local` file:
 
 ```env
-NEXT_PUBLIC_EMAILJS_SERVICE_ID=your_service_id
-NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=your_template_id
-NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=your_public_key
+RESEND_API_KEY=re_your_api_key_here
+CONTACT_RECEIVER_EMAIL=alphwan14@gmail.com
 ```
 
-Replace the placeholder values with your actual EmailJS credentials.
+4. Replace `re_your_api_key_here` with your actual Resend API key
 
-### Alternative: SMS/WhatsApp Integration
+### For Vercel Deployment:
 
-If you want to add SMS or WhatsApp notifications, you can:
+Add the same environment variables in Vercel:
+- Go to **Settings** → **Environment Variables**
+- Add `RESEND_API_KEY` and `CONTACT_RECEIVER_EMAIL`
+- Enable for Production, Preview, and Development
+- Redeploy your site
 
-1. **SMS via Twilio**: Use Twilio API to send SMS notifications
-2. **WhatsApp Business API**: Use WhatsApp Business API for direct messaging
-3. **EmailJS SMS**: EmailJS also supports SMS templates
-
-For SMS integration, you would need to:
-- Set up a Twilio account or WhatsApp Business account
-- Add the API credentials to your environment variables
-- Modify the contact form to send SMS notifications
+**Note:** The contact form sends emails via a server-side API route (`/api/send`), so no client-side secrets are exposed.
 
 ## Project Structure
 
 ```
 lincoln_tech/
 ├── app/
+│   ├── api/
+│   │   └── send/
+│   │       └── route.ts      # Resend API route for contact form
 │   ├── about/
 │   │   └── page.tsx          # About Us page
 │   ├── contact/

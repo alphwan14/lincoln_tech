@@ -58,15 +58,6 @@ export default function Header() {
             ))}
             <Link
               href="/contact"
-              onClick={() => {
-                try {
-                  if (typeof (window as any).plausible === 'function') {
-                    ;(window as any).plausible('cta_get_help', { props: { location: 'header' } })
-                  }
-                } catch (err) {
-                  // ignore
-                }
-              }}
               className="px-6 py-2 bg-gradient-to-r from-primary-light to-secondary-light text-primary-dark font-semibold rounded-lg hover:shadow-lg hover:shadow-primary-light/50 transition-all duration-300 transform hover:scale-105"
             >
               Get Help Today
@@ -76,19 +67,8 @@ export default function Header() {
           {/* Mobile Menu Button */}
           <button
             className="md:hidden text-white focus:outline-none"
-            onClick={() => {
-              const next = !isMobileMenuOpen
-              setIsMobileMenuOpen(next)
-              try {
-                if (typeof (window as any).plausible === 'function') {
-                  ;(window as any).plausible('menu_toggle', { props: { open: next } })
-                }
-              } catch (err) {
-                // ignore analytics errors
-              }
-            }}
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
-            aria-expanded={isMobileMenuOpen}
           >
             <div className="w-6 h-6 flex flex-col justify-center space-y-1.5">
               <motion.span

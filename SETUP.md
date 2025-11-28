@@ -6,32 +6,20 @@
 npm install
 ```
 
-## 2. Configure EmailJS
+## 2. Configure Resend
 
-### Option A: Using EmailJS (Recommended - Free tier available)
-
-1. Sign up at [https://www.emailjs.com/](https://www.emailjs.com/)
-2. Create an email service (Gmail, Outlook, etc.)
-3. Create an email template with these variables:
-   - `{{from_name}}`
-   - `{{from_email}}`
-   - `{{phone}}`
-   - `{{message}}`
-4. Get your Service ID, Template ID, and Public Key
-5. Create `.env.local` file:
+1. Sign up at [https://resend.com/](https://resend.com/)
+2. Get your API key from the [API Keys](https://resend.com/api-keys) page
+3. Create `.env.local` file:
 
 ```env
-NEXT_PUBLIC_EMAILJS_SERVICE_ID=your_service_id
-NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=your_template_id
-NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=your_public_key
+RESEND_API_KEY=re_your_api_key_here
+CONTACT_RECEIVER_EMAIL=alphwan14@gmail.com
 ```
 
-### Option B: Using Nodemailer (Requires backend)
+4. Replace `re_your_api_key_here` with your actual Resend API key
 
-If you prefer Nodemailer, you'll need to:
-1. Create an API route in `app/api/contact/route.ts`
-2. Set up SMTP credentials
-3. Update the contact form to call the API route instead
+📖 **For detailed setup instructions, see [RESEND_SETUP.md](./RESEND_SETUP.md)**
 
 ## 3. Run Development Server
 
@@ -62,9 +50,10 @@ npm start
 ### Contact Form Not Sending
 
 1. Check that `.env.local` file exists and has correct values
-2. Verify EmailJS service is active
+2. Verify `RESEND_API_KEY` and `CONTACT_RECEIVER_EMAIL` are set
 3. Check browser console for errors
-4. Ensure EmailJS template variables match the form data
+4. Verify your Resend API key is active in the Resend dashboard
+5. Check Resend email logs for delivery status
 
 ### Styling Issues
 

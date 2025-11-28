@@ -1,135 +1,110 @@
 'use client'
 
-import { useState, FormEvent, useEffect } from 'react'
+import { useState, FormEvent } from 'react'
 import { motion } from 'framer-motion'
-import emailjs from '@emailjs/browser'
-
-interface FormData {
-  name: string
-  email: string
-  phone: string
-  message: string
-  time: string
-}
-
-interface ContactInfo {
-  icon: string
-  title: string
-  content: string
-  link: string
-}
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     message: '',
-    time: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
-
-  useEffect(() => {
-    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
-    if (publicKey) {
-      emailjs.init(publicKey)
-    }
-  }, [])
+  const [errorMessage, setErrorMessage] = useState<string>('')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
-  const validateEmailJSConfig = (): boolean => {
-    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID
-    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID
-    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
-
-    if (!serviceId || !templateId || !publicKey) {
-      console.error('EmailJS configuration missing. Please check your environment variables.')
-      return false
-    }
-
-    const isDefault = serviceId === 'your_service_id' || 
-                     templateId === 'your_template_id' || 
-                     publicKey === 'your_public_key'
-
-    if (isDefault) {
-      console.error('EmailJS is not properly configured. Please set up your EmailJS credentials in .env.local')
-      return false
-    }
-
-    return true
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    })
   }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setSubmitStatus('idle')
+    setErrorMessage('')
 
     try {
-      // Validate configuration before proceeding
-      if (!validateEmailJSConfig()) {
-        throw new Error('EmailJS configuration is invalid')
-      }
-
-      // Set current time
-      const now = new Date().toLocaleString()
-      
-      // Update form data with current time
-      const submissionData = {
-        ...formData,
-        time: now,
-      }
-
-      // EmailJS configuration
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!
-      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
-
-      // Template parameters
-      const templateParams = {
-        name: submissionData.name,
-        email: submissionData.email,
-        phone: submissionData.phone || 'Not provided',
-        time: submissionData.time,
-        message: submissionData.message,
-        reply_to: submissionData.email,
-      }
-
-      await emailjs.send(serviceId, templateId, templateParams, publicKey)
-
-      setSubmitStatus('success')
-      setFormData({ 
-        name: '', 
-        email: '', 
-        phone: '', 
-        message: '', 
-        time: '' 
+      // Get current timestamp
+      const currentTime = new Date().toLocaleString('en-US', {
+        timeZone: 'Africa/Nairobi',
+        dateStyle: 'full',
+        timeStyle: 'long',
       })
 
-      // Track form submission with Plausible
-      if (typeof window !== 'undefined' && (window as any).plausible) {
-        (window as any).plausible('form_submission', { props: { page: 'contact' } })
+      // Prepare request payload
+      const payload = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || undefined,
+        message: formData.message.trim(),
+        time: currentTime,
       }
 
+      // Send POST request to API route
+      const response = await fetch('/api/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        // If not JSON, it's likely an error page
+        const text = await response.text()
+        console.error('Non-JSON response received:', text.substring(0, 200))
+        throw new Error('Server returned an error. Please check your environment variables and try again.')
+      }
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Failed to send message')
+      }
+
+      // Success
+      setSubmitStatus('success')
+      setFormData({ name: '', email: '', phone: '', message: '' })
+      
+      // Log success for debugging (only in development)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Message sent successfully:', data)
+      }
+      
       // Reset status after 5 seconds
-      setTimeout(() => setSubmitStatus('idle'), 5000)
-    } catch (error) {
-      console.error('Error sending message:', error)
+      setTimeout(() => {
+        setSubmitStatus('idle')
+      }, 5000)
+    } catch (error: any) {
+      // Enhanced error logging
+      console.error('Contact form error:', {
+        error: error,
+        message: error?.message,
+        stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
+      })
+
+      // Provide user-friendly error message
+      const errorMsg = error?.message || 'There was an error sending your message. Please try again or contact us directly.'
+      setErrorMessage(errorMsg)
       setSubmitStatus('error')
-      setTimeout(() => setSubmitStatus('idle'), 5000)
+      
+      // Reset error status after 5 seconds
+      setTimeout(() => {
+        setSubmitStatus('idle')
+        setErrorMessage('')
+      }, 5000)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const contactInfo: ContactInfo[] = [
+  const contactInfo = [
     {
       icon: '📧',
       title: 'Email',
@@ -162,13 +137,10 @@ export default function ContactPage() {
             className="text-center max-w-3xl mx-auto"
           >
             <h1 className="text-5xl sm:text-6xl font-bold mb-6">
-              Get in{' '}
-              <span className="bg-gradient-to-r from-primary-light to-secondary-light bg-clip-text text-transparent">
-                Touch
-              </span>
+              Get in <span className="bg-gradient-to-r from-primary-light to-secondary-light bg-clip-text text-transparent">Touch</span>
             </h1>
             <p className="text-xl text-gray-300">
-              Have a problem we can solve? Send us a message and we&apos;ll get back to you as soon as possible.
+              Have a problem we can solve? Send us a message and we'll get back to you as soon as possible.
             </p>
           </motion.div>
         </div>
@@ -187,12 +159,6 @@ export default function ContactPage() {
             >
               <h2 className="text-3xl font-bold mb-6">Send Us a Message</h2>
               <form onSubmit={handleSubmit} className="space-y-6">
-                <input 
-                  type="hidden" 
-                  name="time" 
-                  value={formData.time} 
-                />
-                
                 <div>
                   <label htmlFor="name" className="block text-gray-300 mb-2 font-medium">
                     Name <span className="text-primary-light">*</span>
@@ -206,7 +172,6 @@ export default function ContactPage() {
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-primary-dark/50 border border-primary-light/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-light transition-colors"
                     placeholder="Your name"
-                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -223,7 +188,6 @@ export default function ContactPage() {
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-primary-dark/50 border border-primary-light/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-light transition-colors"
                     placeholder="your.email@example.com"
-                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -239,7 +203,6 @@ export default function ContactPage() {
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-primary-dark/50 border border-primary-light/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-light transition-colors"
                     placeholder="+254 123 456 789"
-                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -256,7 +219,6 @@ export default function ContactPage() {
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-primary-dark/50 border border-primary-light/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-light transition-colors resize-none"
                     placeholder="Tell us about your problem or how we can help..."
-                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -266,7 +228,7 @@ export default function ContactPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="p-4 bg-green-500/20 border border-green-500/50 rounded-lg text-green-400"
                   >
-                    ✓ Message sent successfully! We&apos;ll get back to you soon.
+                    ✓ Message sent successfully! We'll get back to you soon.
                   </motion.div>
                 )}
 
@@ -276,7 +238,15 @@ export default function ContactPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400"
                   >
-                    ✗ There was an error sending your message. Please try again or contact us directly.
+                    <div className="font-semibold mb-1">✗ Error sending message</div>
+                    <div className="text-sm">
+                      {errorMessage || 'There was an error sending your message. Please try again or contact us directly at '}
+                      {!errorMessage && (
+                        <a href="mailto:alphwan14@gmail.com" className="underline hover:text-red-300">
+                          alphwan14@gmail.com
+                        </a>
+                      )}
+                    </div>
                   </motion.div>
                 )}
 
@@ -305,15 +275,13 @@ export default function ContactPage() {
               <div className="space-y-6 mb-8">
                 {contactInfo.map((info, index) => (
                   <motion.a
-                    key={info.title}
+                    key={index}
                     href={info.link}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, delay: index * 0.1 }}
                     className="block bg-gradient-to-br from-primary-dark to-secondary-dark border border-primary-light/20 rounded-xl p-6 hover:border-primary-light/50 transition-all duration-300 group"
-                    target={info.link.startsWith('http') ? '_blank' : '_self'}
-                    rel={info.link.startsWith('http') ? 'noopener noreferrer' : undefined}
                   >
                     <div className="flex items-start space-x-4">
                       <div className="text-4xl group-hover:scale-110 transition-transform">
@@ -346,3 +314,4 @@ export default function ContactPage() {
     </div>
   )
 }
+
